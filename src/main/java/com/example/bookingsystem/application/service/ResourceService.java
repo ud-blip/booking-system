@@ -3,6 +3,7 @@ package com.example.bookingsystem.application.service;
 import com.example.bookingsystem.application.exception.ResourceNotFoundException;
 import com.example.bookingsystem.application.mapper.BookingMapper;
 import com.example.bookingsystem.domain.Resource;
+import com.example.bookingsystem.infrastructure.repository.BookingRepository;
 import com.example.bookingsystem.infrastructure.repository.ResourceRepository;
 import com.example.bookingsystem.presentation.dto.ResourceDTO;
 import org.springframework.cache.annotation.Cacheable;
@@ -16,10 +17,12 @@ public class ResourceService {
 
     private final ResourceRepository resourceRepository;
     private final BookingMapper bookingMapper;
+    private final BookingRepository bookingRepository;
 
-    public ResourceService(ResourceRepository resourceRepository, BookingMapper bookingMapper) {
+    public ResourceService(ResourceRepository resourceRepository, BookingMapper bookingMapper, BookingRepository bookingRepository) {
         this.resourceRepository = resourceRepository;
         this.bookingMapper = bookingMapper;
+        this.bookingRepository = bookingRepository;
     }
 
     public ResourceDTO createResource(ResourceDTO dto) {
@@ -42,6 +45,9 @@ public class ResourceService {
     public void deleteResource(Long id) {
         if (!resourceRepository.existsById(id)) {
             throw new ResourceNotFoundException("Resource not found: " + id);
+        }
+        if (bookingRepository.existsByResourceId(id)) {
+            throw new IllegalStateException("Cannot delete resource with existing bookings");
         }
         resourceRepository.deleteById(id);
     }

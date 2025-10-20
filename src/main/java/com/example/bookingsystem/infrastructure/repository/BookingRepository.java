@@ -21,4 +21,6 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     @Query("SELECT COUNT(b) FROM Booking b WHERE b.user.id = :userId AND DATE(b.startTime) = DATE(:date) AND b.status != 'CANCELLED'")
     long countByUserIdAndDate(@Param("userId") Long userId, @Param("date") LocalDateTime date);
+
+    boolean existsByResourceId(Long resourceId);
 }

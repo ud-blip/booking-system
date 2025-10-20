@@ -96,8 +96,12 @@ public class BookingService {
     }
 
     @Transactional
-    @CacheEvict(value = "availableSlots", key = "{#booking.resource.id, #booking.startTime.toLocalDate()}")
-    public void cancelBooking(Long id) {
+    @CacheEvict(
+            value = "availableSlots",
+            key = "{#result.resource.id, #result.startTime.toLocalDate()}",
+            beforeInvocation = false
+    )
+    public Booking cancelBooking(Long id) {
         Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + id));
 
@@ -107,13 +111,14 @@ public class BookingService {
         }
 
         booking.setStatus(BookingStatus.CANCELLED);
-        bookingRepository.save(booking);
+        Booking savedBooking = bookingRepository.save(booking);
         eventPublisher.publishEvent(new BookingCancelledEvent(
                 user.getEmail(),
                 booking.getResource().getName(),
                 booking.getStartTime(),
                 booking.getEndTime()
         ));
+        return savedBooking;
     }
 
     public List<BookingResponseDTO> getUserBookings() {
